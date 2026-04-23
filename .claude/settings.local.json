@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod u+w \"C:\\\\Users\\\\Administrator\\\\.claude\\\\CLAUDE.md\")",
+      "Read(//c/Users/Administrator/.claude/**)"
+    ]
+  }
+}

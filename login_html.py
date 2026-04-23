@@ -593,6 +593,48 @@ def add_to_excel():
         return jsonify({"success": False, "message": f"写入 Excel 失败: {str(e)}"}), 500
 
 
+@app.route('/api/update_lims_unit', methods=['POST'])
+def update_lims_unit():
+    if not session.get('logged_in'):
+        return jsonify({"success": False, "message": "未登录"}), 401
+    try:
+        data = request.get_json()
+        record_id = data.get('recordId')
+        new_unit = data.get('concentrationUnitName', '').strip()
+        lims_item = data.get('limsItem')
+        if not record_id or not lims_item:
+            return jsonify({"success": False, "message": "缺少记录ID或原始数据"}), 400
+
+        system = get_system()
+        if not system.current_user:
+            return jsonify({"success": False, "message": "远程会话已失效，请重新登录"})
+
+        form_data = {}
+        form_data['concentrationUnitName'] = new_unit
+        form_data['pid'] = system.current_pid
+        form_data['pname'] = system.current_user
+        form_data['loginId'] = system.current_pid
+        form_data['_method'] = 'PUT'
+
+        url = f"{system.base_url}/detectionManager/manager/consumableBill/{record_id}"
+        for k in list(form_data.keys()):
+            if form_data[k] is None:
+                form_data[k] = ''
+        resp = system.session.post(url, data=form_data)
+        if resp.status_code != 200:
+            try: detail = resp.text[:2000]
+            except: pass
+            print(f"[LIMS UPDATE] response: {detail}")
+            return jsonify({"success": False, "message": f"LIMS 请求失败，状态码: {resp.status_code}，{detail}"})
+        result = resp.json()
+        if result.get('success'):
+            return jsonify({"success": True, "message": "浓度单位已同步到 LIMS"})
+        else:
+            return jsonify({"success": False, "message": result.get('errorDesc', '更新失败')})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"LIMS 同步异常: {str(e)}"}), 500
+
+
 if __name__ == '__main__':
     if not os.path.exists('templates'): os.makedirs('templates')
     config = load_config()

@@ -116,11 +116,16 @@
         .form-label { font-size: 0.75rem; margin-bottom: 0.2rem; font-weight: 500; color: #6B7280; }
         .form-control, .form-select {
             font-size: 0.78rem;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
             padding: 0.3rem 0.6rem;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
             background: rgba(255,255,255,0.7);
             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-select option {
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 0.78rem;
         }
         .form-control:focus, .form-select:focus {
             border-color: #3B82F6;
@@ -250,6 +255,60 @@
             color: #dc2626;
             background: rgba(239,68,68,0.08);
         }
+
+        /* 醒目标识（浓度单位、组别） */
+        .highlight-input,
+        .conc-unit-input {
+            border-left: 3px solid #6366F1 !important;
+            background: rgba(99,102,241,0.08) !important;
+        }
+        .highlight-input:focus,
+        .conc-unit-input:focus {
+            border-left: 3px solid #6366F1 !important;
+            background: rgba(99,102,241,0.12) !important;
+        }
+        .conc-unit-badge {
+            display: inline-block;
+            background: #6366F1;
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        /* 自定义下拉 */
+        .custom-dropdown { position: relative; }
+        .custom-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-top: 2px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .custom-dropdown-menu.show { display: block; }
+        .custom-dropdown-item {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.78rem;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            color: #111827;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .custom-dropdown-item:hover {
+            background: rgba(59,130,246,0.1);
+        }
     </style>
 </head>
 <body>
@@ -305,18 +364,23 @@
             </div>
         </div>
     </div>
-    <!-- 其余字段两列紧凑排列 -->
-    <div class="row g-2">
+    <!-- 第二行：编号 + 组别 -->
+    <div class="row g-2 mb-2">
         <div class="col-md-6">
             <label class="form-label">编号</label>
             <input type="text" class="form-control" id="originalId" placeholder="自动生成或手动输入">
         </div>
         <div class="col-md-6">
-            <label class="form-label">组别 *</label>
-            <input type="text" class="form-control" id="group" list="groupOptions" placeholder="选择或输入组别" required>
-            <datalist id="groupOptions"></datalist>
+            <label class="form-label">组别 * <span class="conc-unit-badge">请输入</span></label>
+            <div class="custom-dropdown">
+                <input type="text" class="form-control highlight-input" id="group" placeholder="选择或输入组别" autocomplete="off" required>
+                <div class="custom-dropdown-menu" id="groupDropdown"></div>
+            </div>
         </div>
-        <div class="col-12">
+    </div>
+    <!-- 第三行：标品名称 + CAS号 -->
+    <div class="row g-2 mb-2">
+        <div class="col-md-6">
             <label class="form-label">标品名称 *</label>
             <input type="text" class="form-control" id="name" required>
         </div>
@@ -324,25 +388,59 @@
             <label class="form-label">CAS号 *</label>
             <input type="text" class="form-control" id="cas" required>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">规格/浓度</label>
+    </div>
+    <!-- 第四行：规格/浓度/单位 + 存放地点 -->
+    <div class="row g-2 mb-2">
+        <div class="col-md-3">
+            <label class="form-label">规格</label>
             <input type="text" class="form-control" id="spec">
         </div>
-        <div class="col-md-6">
-            <label class="form-label">生产商</label>
-            <input type="text" class="form-control" id="manufacturer">
+        <div class="col-md-3">
+            <label class="form-label">浓度</label>
+            <input type="text" class="form-control" id="concentration">
         </div>
-        <div class="col-md-6">
-            <label class="form-label">有效期 (YYYY-MM-DD)</label>
-            <input type="text" class="form-control" id="expiry" placeholder="2027-02-10 或 /">
+        <div class="col-md-3">
+            <label class="form-label">浓度单位 <span class="conc-unit-badge">请核对</span></label>
+            <div class="custom-dropdown">
+                <input type="text" class="form-control conc-unit-input" id="concUnit" placeholder="选择或输入" autocomplete="off">
+                <div class="custom-dropdown-menu" id="concUnitDropdown">
+                    <div class="custom-dropdown-item">%</div>
+                    <div class="custom-dropdown-item">mg/L</div>
+                    <div class="custom-dropdown-item">μg/mL</div>
+                </div>
+            </div>
+            <input type="hidden" id="limsRecordId">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <label class="form-label">存放地点</label>
             <input type="text" class="form-control" id="location">
         </div>
+    </div>
+    <script>
+    // 浓度单位：聚焦时清空以显示所有下拉选项，失焦时恢复
+    (function(){
+        var el = document.getElementById('concUnit');
+        var saved = '';
+        el.addEventListener('focus', function(){ saved = el.value; el.value = ''; });
+        el.addEventListener('blur', function(){ if(!el.value) el.value = saved; });
+    })();
+    </script>
+    <!-- 第五行：入库日期 + 有效期 -->
+    <div class="row g-2 mb-2">
         <div class="col-md-6">
             <label class="form-label">入库日期</label>
             <input type="text" class="form-control" id="storageDate" placeholder="YYYY-MM-DD">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">有效期 </label>
+            <input type="text" class="form-control" id="expiry" placeholder="YYYY-MM-DD">
+        </div>
+    </div>
+    <!-- 第六行：生产厂商 + 使用情况 -->
+    <div class="row g-2 mb-2">
+        <div class="col-md-6">
+            <label class="form-label">生产厂商</label>
+            <input type="text" class="form-control" id="manufacturer">
         </div>
         <div class="col-md-6">
             <label class="form-label">使用情况</label>
@@ -351,6 +449,9 @@
                 <option>开封</option>
             </select>
         </div>
+    </div>
+    <!-- 第七行：备注 -->
+    <div class="row g-2">
         <div class="col-12">
             <label class="form-label">备注</label>
             <textarea class="form-control" id="remarks" rows="2"></textarea>
@@ -428,6 +529,8 @@
     let currentLoggedUser = null;
     let loginModalInstance = null;
     let queryResultModalInstance = null;
+    let currentLimsItem = null;
+    let originalConcUnit = '';
 
     // DOM 元素
     const showLoginBtn = document.getElementById('showLoginModalBtn');
@@ -549,12 +652,13 @@
     // ---------- 组别下拉选项更新 ----------
     function updateGroupDatalist() {
         const groups = [...new Set(standardsData.map(item => item.group).filter(g => g && g.trim()))].sort();
-        const datalist = document.getElementById('groupOptions');
-        datalist.innerHTML = '';
+        const dropdown = document.getElementById('groupDropdown');
+        dropdown.innerHTML = '';
         groups.forEach(g => {
-            const option = document.createElement('option');
-            option.value = g;
-            datalist.appendChild(option);
+            const div = document.createElement('div');
+            div.className = 'custom-dropdown-item';
+            div.textContent = g;
+            dropdown.appendChild(div);
         });
     }
 
@@ -826,19 +930,22 @@
         }
     }
 
+    function trimVal(v) { return (v == null ? '' : String(v).trim()) || ''; }
+
     function fillFormFromQueryItem(item) {
-        document.getElementById('labNo').value = item.customNum || '';
-        document.getElementById('name').value = item.name || '';
-        document.getElementById('cas').value = item.casNo || '';
-        let spec = item.standard || '';
-        let conc = item.concentration || '';
-        if (conc && item.concentrationUnitName) conc += ' ' + item.concentrationUnitName;
-        if (spec && conc) spec = spec + ' / ' + conc;
-        else if (conc) spec = conc;
-        document.getElementById('spec').value = spec || '';
-        document.getElementById('manufacturer').value = item.factoryName || '';
-        document.getElementById('expiry').value = item.validDate || '';
-        const locationVal = item.storageCondition || '';
+        currentLimsItem = item;
+        document.getElementById('labNo').value = trimVal(item.customNum);
+        document.getElementById('name').value = trimVal(item.name);
+        document.getElementById('cas').value = trimVal(item.casNo);
+        document.getElementById('spec').value = trimVal(item.standard);
+        document.getElementById('concentration').value = trimVal(item.concentration);
+        const unitVal = trimVal(item.concentrationUnitName);
+        document.getElementById('concUnit').value = unitVal;
+        originalConcUnit = unitVal;
+        document.getElementById('limsRecordId').value = trimVal(item.id);
+        document.getElementById('manufacturer').value = trimVal(item.factoryName);
+        document.getElementById('expiry').value = trimVal(item.validDate);
+        const locationVal = trimVal(item.storageCondition);
         document.getElementById('location').value = locationVal;
         const today = new Date();
         const year = today.getFullYear();
@@ -888,10 +995,13 @@
     }
 
     // ---------- 打开新增/编辑模态框 ----------
-    function openAddModal() { 
-        resetForm(); 
-        document.getElementById('modalTitle').innerText = '新增标准品'; 
+    function openAddModal() {
+        resetForm();
+        document.getElementById('modalTitle').innerText = '新增标准品';
         document.getElementById('editId').value = '';
+        currentLimsItem = null;
+        originalConcUnit = '';
+        document.getElementById('limsRecordId').value = '';
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -912,7 +1022,27 @@
         document.getElementById('labNo').value = item.labNo || '';
         document.getElementById('name').value = item.name;
         document.getElementById('cas').value = item.cas;
-        document.getElementById('spec').value = item.spec || '';
+        currentLimsItem = null;
+        originalConcUnit = '';
+        document.getElementById('limsRecordId').value = '';
+        const specStr = item.spec || '';
+        const slashIdx = specStr.indexOf(' / ');
+        if (slashIdx !== -1) {
+            document.getElementById('spec').value = specStr.substring(0, slashIdx);
+            const concPart = specStr.substring(slashIdx + 3).trim();
+            const spaceIdx = concPart.lastIndexOf(' ');
+            if (spaceIdx !== -1) {
+                document.getElementById('concentration').value = concPart.substring(0, spaceIdx);
+                document.getElementById('concUnit').value = concPart.substring(spaceIdx + 1);
+            } else {
+                document.getElementById('concentration').value = concPart;
+                document.getElementById('concUnit').value = '';
+            }
+        } else {
+            document.getElementById('spec').value = specStr;
+            document.getElementById('concentration').value = '';
+            document.getElementById('concUnit').value = '';
+        }
         document.getElementById('manufacturer').value = item.manufacturer || '';
         document.getElementById('expiry').value = (item.expiry === '/' || !item.expiry) ? '' : item.expiry;
         document.getElementById('location').value = item.location || '';
@@ -924,10 +1054,15 @@
     }
     window.openEditModal = openEditModal;
 
-    function resetForm() { 
-        document.getElementById('standardForm').reset(); 
-        document.getElementById('usageStatus').value = '未开封'; 
-        document.getElementById('editId').value = ''; 
+    function resetForm() {
+        document.getElementById('standardForm').reset();
+        document.getElementById('usageStatus').value = '未开封';
+        document.getElementById('editId').value = '';
+        document.getElementById('concentration').value = '';
+        document.getElementById('concUnit').value = '';
+        document.getElementById('limsRecordId').value = '';
+        currentLimsItem = null;
+        originalConcUnit = '';
     }
 
     async function saveStandard() {
@@ -938,13 +1073,22 @@
         const cas = document.getElementById('cas').value.trim();
         if (!group || !name || !cas) { alert('请填写组别、标品名称和CAS号'); return; }
 
+        const specVal = document.getElementById('spec').value.trim();
+        const concVal = document.getElementById('concentration').value.trim();
+        const concUnitVal = document.getElementById('concUnit').value.trim();
+        let combinedSpec = specVal;
+        if (concVal) {
+            const concWithUnit = concUnitVal ? concVal + ' ' + concUnitVal : concVal;
+            combinedSpec = combinedSpec ? combinedSpec + ' / ' + concWithUnit : concWithUnit;
+        }
+
         const newRecord = {
             originalId: originalId,
-            group, 
+            group,
             labNo: document.getElementById('labNo').value.trim(),
-            name, 
-            cas, 
-            spec: document.getElementById('spec').value.trim(),
+            name,
+            cas,
+            spec: combinedSpec,
             manufacturer: document.getElementById('manufacturer').value.trim(),
             expiry: (document.getElementById('expiry').value.trim() === '') ? '/' : document.getElementById('expiry').value.trim(),
             location: document.getElementById('location').value.trim(),
@@ -984,7 +1128,37 @@
             saveBtn.innerHTML = originalText;
         }
 
-        // Excel 写入成功（或未配置路径），更新本地数据
+        // Excel 写入成功（或未配置路径），尝试 LIMS 回写浓度单位
+        const limsId = document.getElementById('limsRecordId').value;
+        console.log('[LIMS debug]', {limsId, currentLimsItem: !!currentLimsItem, concUnitVal, originalConcUnit, changed: concUnitVal !== originalConcUnit});
+        if (limsId && currentLimsItem && concUnitVal && concUnitVal !== originalConcUnit) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 同步 LIMS...';
+            try {
+                const resp = await fetch('/api/update_lims_unit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recordId: limsId,
+                        concentrationUnitName: concUnitVal,
+                        limsItem: currentLimsItem
+                    }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('LIMS 浓度单位同步失败：' + data.message + '\n（Excel 已保存成功）');
+                } else {
+                    originalConcUnit = concUnitVal;
+                }
+            } catch (err) {
+                alert('LIMS 同步异常：' + err.message + '\n（Excel 已保存成功）');
+            }
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
+
+        // 更新本地数据
         if (id) {
             const idx = standardsData.findIndex(s => s.id == id);
             if (idx !== -1) standardsData[idx] = { ...standardsData[idx], ...newRecord };
@@ -1051,6 +1225,46 @@
         document.getElementById('searchNameCas').addEventListener('keypress', e => { if(e.key === 'Enter') filterData(); });
         document.getElementById('searchGroup').addEventListener('keypress', e => { if(e.key === 'Enter') filterData(); });
         document.getElementById('queryLabNoBtn').addEventListener('click', queryAndFill);
+
+        // ---------- 自定义下拉交互 ----------
+        function initCustomDropdown(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const menu = document.getElementById(dropdownId);
+
+            input.addEventListener('focus', function() {
+                filterDropdown(input, menu, '');
+                menu.classList.add('show');
+            });
+
+            input.addEventListener('input', function() {
+                filterDropdown(input, menu, input.value.trim());
+                menu.classList.add('show');
+            });
+
+            menu.addEventListener('mousedown', function(e) {
+                const item = e.target.closest('.custom-dropdown-item');
+                if (item) {
+                    input.value = item.textContent;
+                    menu.classList.remove('show');
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(() => menu.classList.remove('show'), 150);
+            });
+        }
+
+        function filterDropdown(input, menu, keyword) {
+            const items = menu.querySelectorAll('.custom-dropdown-item');
+            const kw = keyword.toLowerCase();
+            items.forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(kw) ? '' : 'none';
+            });
+        }
+
+        initCustomDropdown('group', 'groupDropdown');
+        initCustomDropdown('concUnit', 'concUnitDropdown');
     });
 </script>
 </body>
