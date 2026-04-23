@@ -274,8 +274,7 @@ def get_system():
 @app.route('/')
 def index():
     if not session.get('logged_in'): return redirect('/login')
-    return render_template('main.html', username=session.get('username', ''),
-                           display_name=session.get('display_name', session.get('username', '')))
+    return redirect('/organic-std')
 
 @app.route('/login')
 def login_page():

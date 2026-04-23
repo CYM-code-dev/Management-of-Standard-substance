@@ -4,6 +4,7 @@
 # Sessions & secrets
 session_*.json
 users_config.json
+config.json
 
 # Python
 __pycache__/
