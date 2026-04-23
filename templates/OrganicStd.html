@@ -170,7 +170,7 @@
             transition: transform 0.2s, color 0.2s;
         }
         .cert-icon:hover { transform: scale(1.15); color: #dc2626; }
-        .labno-cell { display: inline-flex; align-items: center; gap: 5px; }
+        .labno-cell { display: flex; align-items: center; justify-content: space-between; gap: 5px; width: 100%; }
 
         /* 登录栏 */
         .login-bar {
@@ -656,7 +656,7 @@
             const storageDisplay = (!item.storageDate || item.storageDate === '/') ? '—' : item.storageDate;
             const originalIdDisplay = (item.originalId && item.originalId.toString().trim() !== '') ? item.originalId : '—';
             const labNoValue = item.labNo || '';
-            const labNoCell = labNoValue ? `<div class="labno-cell">${escapeHtml(labNoValue)}<i class="fas fa-file-pdf cert-icon" data-labno="${escapeAttr(labNoValue)}" title="打开证书"></i></div>` : '—';
+            const labNoCell = (labNoValue && labNoValue !== '/') ? `<div class="labno-cell">${escapeHtml(labNoValue)}<i class="fas fa-file-pdf cert-icon" data-labno="${escapeAttr(labNoValue)}" title="打开证书"></i></div>` : (labNoValue === '/' ? escapeHtml(labNoValue) : '—');
             html += `<tr class="${expired ? 'expired-row' : ''}"><td>${escapeHtml(originalIdDisplay)}</td><td>${escapeHtml(item.group)}</td><td>${labNoCell}</td><td><strong>${escapeHtml(item.name)}</strong></td><td>${escapeHtml(item.cas)}</td><td>${escapeHtml(item.spec)}</td><td>${expiryDisplay}</td><td>${escapeHtml(item.location)}</td><td>${storageDisplay}</td><td><span class="badge ${item.usage === '开封' ? 'bg-warning text-dark' : 'bg-success'}">${item.usage}</span></td><td class="action-icons"><i class="fas fa-edit text-primary" onclick="openEditModal(${item.id})" title="编辑"></i><i class="fas fa-trash-alt text-danger" onclick="openDeleteModal(${item.id}, '${escapeHtml(item.name).replace(/'/g, "\\'")}')" title="删除"></i></td></tr>`;
         });
         tbody.innerHTML = html;
