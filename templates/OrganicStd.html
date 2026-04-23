@@ -1,0 +1,1057 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>有机标准品管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        *,*::before,*::after { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: #eef2ff;
+            background-image:
+                radial-gradient(ellipse 600px 400px at 10% 20%, rgba(99,102,241,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 85% 60%, rgba(59,130,246,0.10) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 50% 90%, rgba(139,92,246,0.08) 0%, transparent 70%);
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.65;
+            color: #111827;
+        }
+
+        /* 标题渐变 */
+        h2.fw-bold {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #111827, #6366F1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 玻璃卡片 */
+        .card, .glass-card {
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 10px;
+            transition: transform 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3B82F6, #6366F1);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(99,102,241,0.10);
+        }
+        .card:hover::before { opacity: 1; }
+        .card-body { padding: 0.85rem 1rem; }
+
+        /* 导航栏 / 标题栏 */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.55);
+            border-bottom: 1px solid rgba(255,255,255,0.7);
+            padding: 0.6rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 按钮 */
+        .btn {
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 0.35rem 0.85rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+            box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+        }
+        .btn-primary:hover {
+            background-color: #2563EB;
+            border-color: #2563EB;
+            box-shadow: 0 6px 20px rgba(59,130,246,0.45);
+        }
+        .btn-outline-primary {
+            color: #3B82F6;
+            border-color: #3B82F6;
+        }
+        .btn-outline-primary:hover {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+            box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+        }
+        .btn-outline-secondary {
+            color: #6B7280;
+            border-color: #d1d5db;
+        }
+        .btn-outline-secondary:hover {
+            background: rgba(107,114,128,0.08);
+            border-color: #9ca3af;
+            color: #374151;
+        }
+
+        /* 表单 */
+        .form-label { font-size: 0.75rem; margin-bottom: 0.2rem; font-weight: 500; color: #6B7280; }
+        .form-control, .form-select {
+            font-size: 0.78rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: rgba(255,255,255,0.7);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        /* 表格 */
+        .table { font-size: 0.78rem; }
+        .table thead th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            color: white;
+            padding: 0.55rem 0.45rem;
+            border: none;
+        }
+        .table td {
+            padding: 0.45rem 0.4rem;
+            vertical-align: middle;
+            border-color: #f3f4f6;
+        }
+        .table-responsive {
+            max-height: 68vh;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.7);
+            overflow: auto;
+        }
+        .action-icons i { font-size: 0.9rem; cursor: pointer; margin: 0 4px; transition: transform 0.15s; }
+        .action-icons i:hover { transform: scale(1.15); }
+
+        /* 徽章 */
+        .badge { font-size: 0.65rem; font-weight: 500; border-radius: 6px; }
+        .badge.bg-success { background-color: #3B82F6 !important; }
+        .badge.bg-warning { background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #fff !important; }
+        .badge.bg-secondary { background: #6366F1 !important; }
+        #recordCount { font-size: 0.7rem; }
+
+        /* 证书图标 */
+        .cert-icon {
+            color: #ef4444;
+            margin-left: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .cert-icon:hover { transform: scale(1.15); color: #dc2626; }
+        .labno-cell { display: inline-flex; align-items: center; gap: 5px; }
+
+        /* 登录栏 */
+        .login-bar {
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .login-bar i { margin-right: 4px; color: #6366F1; }
+
+        /* 模态框 */
+        .modal-content {
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+        .modal-header.bg-primary {
+            background: linear-gradient(135deg, #3B82F6, #6366F1) !important;
+            border-bottom: none;
+        }
+        .modal-header.bg-info {
+            background: linear-gradient(135deg, #3B82F6, #6366F1) !important;
+            border-bottom: none;
+        }
+        .modal-header.bg-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+            border-bottom: none;
+        }
+        .modal-body { padding: 1rem 1.2rem; }
+        .modal-footer { border-top: 1px solid #f3f4f6; }
+        .modal-footer .btn { padding: 0.3rem 0.75rem; }
+        .modal-body .row.g-2 { --bs-gutter-y: 0.25rem; }
+        .modal-body .row.g-2 > [class*="col-"] { margin-top: 0.1rem; }
+        .modal-body .form-label { font-size: 0.75rem; }
+        #loginModal .modal-dialog { max-width: 360px; }
+
+        /* 验证码 */
+        .captcha-img-modal {
+            height: 38px;
+            width: 100px;
+            cursor: pointer;
+            object-fit: contain;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .query-btn { white-space: nowrap; }
+
+        /* 过期行 */
+        .expired-row { background-color: rgba(229,231,235,0.5) !important; }
+        .expired-row td { background-color: inherit !important; }
+
+        /* 悬停行 */
+        .table-hover tbody tr:hover { background-color: rgba(59,130,246,0.08) !important; }
+        .table-hover tbody tr:hover td { background-color: inherit !important; }
+
+        /* 退出按钮 */
+        #logoutBtn {
+            border: none;
+            background: transparent;
+            color: #ef4444;
+            font-size: 1rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        #logoutBtn:hover {
+            color: #dc2626;
+            background: rgba(239,68,68,0.08);
+        }
+    </style>
+</head>
+<body>
+<div class="top-bar d-flex flex-wrap justify-content-between align-items-center">
+    <div><h2 class="fw-bold mb-0"><i class="fas fa-flask me-2"></i>有机标准品管理系统</h2></div>
+    <div class="d-flex align-items-center gap-3">
+        <button id="showLoginModalBtn" class="btn btn-outline-primary"><i class="fas fa-sign-in-alt me-1"></i>登录</button>
+        <div id="userInfoBox" class="login-bar" style="display: none;">
+            <i class="fas fa-user-circle"></i> <span id="displayUserName"></span>
+            <button class="ms-2" id="logoutBtn" title="退出登录"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        <button class="btn btn-outline-secondary me-2" id="manualImportBtn"><i class="fas fa-file-excel me-1"></i>手动导入Excel</button>
+        <button class="btn btn-primary shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#standardModal" onclick="openAddModal()"><i class="fas fa-plus-circle me-1"></i>新增标准品</button>
+        <button class="btn btn-outline-secondary" id="settingsBtn"><i class="fas fa-cog me-1"></i>设置</button>
+    </div>
+</div>
+<div class="container-fluid px-3 px-lg-4 py-3">
+
+    <!-- 查询卡片 -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3"><label class="form-label">标品名称 / CAS / 实验室编号</label><input type="text" id="searchNameCas" class="form-control" placeholder="名称/CAS/实验室编号"></div>
+                <div class="col-md-2"><label class="form-label">组别</label><input type="text" id="searchGroup" class="form-control" placeholder="如 SVHC, PAE"></div>
+                <div class="col-md-2"><label class="form-label">过期状态</label><select id="expiredFilter" class="form-select"><option value="all">全部</option><option value="expired">仅过期</option><option value="valid">仅有效</option></select></div>
+                <div class="col-md-2"><label class="form-label">使用情况</label><select id="usageFilter" class="form-select"><option value="all">全部</option><option value="未开封">未开封</option><option value="开封">已开封</option></select></div>
+                <div class="col-md-3 d-flex gap-2"><button class="btn btn-outline-primary w-50" id="searchBtn">查询</button><button class="btn btn-outline-secondary w-50" id="resetBtn">重置</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0">
+            <thead>
+                <tr><th>编号</th><th>组别</th><th>实验室编号</th><th>标品名称</th><th>CAS号</th><th>规格/浓度</th><th>有效期</th><th>存放地点</th><th>入库日期</th><th>使用情况</th><th>操作</th></tr>
+            </thead>
+            <tbody id="standardTableBody"><tr><td colspan="11" class="text-center text-muted">正在加载数据...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between mt-2"><span id="recordCount" class="badge bg-secondary">0</span><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> 灰色背景为已过期</small></div>
+</div>
+
+<!-- 新增/编辑模态框 -->
+<div class="modal fade" id="standardModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><span id="modalTitle">新增标准品</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="standardForm"><input type="hidden" id="editId">
+    <!-- 第一行：实验室编号 + 查询按钮 -->
+    <div class="row g-2 mb-2">
+        <div class="col-12">
+            <label class="form-label">实验室编号</label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="labNo" placeholder="输入编号或关键词">
+                <button class="btn btn-primary query-btn" type="button" id="queryLabNoBtn"><i class="fas fa-search"></i> 查询</button>
+            </div>
+        </div>
+    </div>
+    <!-- 其余字段两列紧凑排列 -->
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label">编号</label>
+            <input type="text" class="form-control" id="originalId" placeholder="自动生成或手动输入">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">组别 *</label>
+            <input type="text" class="form-control" id="group" list="groupOptions" placeholder="选择或输入组别" required>
+            <datalist id="groupOptions"></datalist>
+        </div>
+        <div class="col-12">
+            <label class="form-label">标品名称 *</label>
+            <input type="text" class="form-control" id="name" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">CAS号 *</label>
+            <input type="text" class="form-control" id="cas" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">规格/浓度</label>
+            <input type="text" class="form-control" id="spec">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">生产商</label>
+            <input type="text" class="form-control" id="manufacturer">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">有效期 (YYYY-MM-DD)</label>
+            <input type="text" class="form-control" id="expiry" placeholder="2027-02-10 或 /">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">存放地点</label>
+            <input type="text" class="form-control" id="location">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">入库日期</label>
+            <input type="text" class="form-control" id="storageDate" placeholder="YYYY-MM-DD">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">使用情况</label>
+            <select class="form-select" id="usageStatus">
+                <option>未开封</option>
+                <option>开封</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label class="form-label">备注</label>
+            <textarea class="form-control" id="remarks" rows="2"></textarea>
+        </div>
+    </div>
+</form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="saveStandardBtn">保存</button></div></div></div></div>
+
+<!-- 设置模态框 -->
+<div class="modal fade" id="settingsModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-cog me-2"></i>系统设置</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label fw-bold">Excel文件UNC路径</label><input type="text" class="form-control" id="settingExcelUrl" placeholder="\\\\server\\share\\folder\\有机标准品.xls"></div><div class="mb-3"><label class="form-label fw-bold">证书文件夹UNC路径</label><input type="text" class="form-control" id="settingCertBaseUrl" placeholder="\\\\server\\share\\证书文件夹"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="saveSettingsBtn">保存并加载</button></div></div></div></div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-danger"><h5 class="modal-title">确认删除</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">确定要删除 <strong id="deleteItemName"></strong> 吗？</div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button class="btn btn-danger" id="confirmDeleteBtn">确认删除</button></div></div></div></div>
+
+<!-- 登录模态框 -->
+<div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-lock me-2"></i>登录系统</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="mb-3"><label class="form-label">账号</label><input type="text" class="form-control" id="loginUsername" placeholder="请输入账号" autocomplete="username" required></div>
+                    <div class="mb-3"><label class="form-label">密码</label><div class="input-group"><input type="password" class="form-control" id="loginPassword" placeholder="请输入密码" autocomplete="current-password" required><button class="btn btn-outline-secondary" type="button" id="togglePwdBtn">👁️</button></div></div>
+                    <div class="mb-3"><label class="form-label">验证码</label><div class="d-flex gap-2"><input type="text" class="form-control" id="loginCaptcha" placeholder="请输入验证码" autocomplete="off" required><img id="captchaImg" class="captcha-img-modal" alt="验证码" title="点击刷新"></div></div>
+                    <div id="loginErrorMsg" class="text-danger small mb-2" style="display:none;"></div>
+                    <button type="submit" class="btn btn-primary w-100">登 录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 查询结果选择模态框 -->
+<div class="modal fade" id="queryResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-list me-2"></i>选择耗材记录</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-hover">
+                        <thead><tr><th>编号</th><th>名称</th><th>CAS号</th><th>规格/浓度</th><th>有效期</th><th>生产厂家</th><th>储存条件</th><th>操作</th></tr></thead>
+                        <tbody id="queryResultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 隐藏表单：用于触发浏览器密码保存 -->
+<form id="savePasswordForm" method="post" action="/api/login" target="_self" style="display:none;">
+    <input type="hidden" name="username" id="hiddenUsername">
+    <input type="hidden" name="password" id="hiddenPassword">
+    <input type="hidden" name="captcha" id="hiddenCaptcha">
+    <input type="hidden" name="client_ua" id="hiddenClientUA">
+    <input type="hidden" name="next" value="/organic-std">
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ---------- 全局变量 ----------
+    let standardsData = [];
+    let deleteTargetId = null;
+    let excelUncPath = '';
+    let certUncPath = '';
+    let certBaseUrl = '/certificates/';
+    let currentLoggedUser = null;
+    let loginModalInstance = null;
+    let queryResultModalInstance = null;
+
+    // DOM 元素
+    const showLoginBtn = document.getElementById('showLoginModalBtn');
+    const userInfoBox = document.getElementById('userInfoBox');
+    const displayUserNameSpan = document.getElementById('displayUserName');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const captchaImg = document.getElementById('captchaImg');
+    const togglePwdBtn = document.getElementById('togglePwdBtn');
+
+    // ---------- 登录相关函数 ----------
+    async function refreshCaptcha() {
+        try {
+            const resp = await fetch('/api/captcha');
+            const data = await resp.json();
+            if (data.success) captchaImg.src = data.image;
+            else console.warn('获取验证码失败');
+        } catch (e) { console.error('验证码请求异常', e); }
+    }
+
+    async function checkLoginStatus() {
+        try {
+            const resp = await fetch('/api/status', { credentials: 'include' });
+            const data = await resp.json();
+            if (data.logged_in) {
+                currentLoggedUser = data.username;
+                showLoggedInUI(data.display_name || data.username);
+            } else showLoggedOutUI();
+        } catch (e) { console.warn('获取登录状态失败', e); showLoggedOutUI(); }
+    }
+
+    function showLoggedInUI(displayName) {
+        showLoginBtn.style.display = 'none';
+        userInfoBox.style.display = 'block';
+        displayUserNameSpan.textContent = displayName;
+    }
+
+    function showLoggedOutUI() {
+        showLoginBtn.style.display = 'inline-block';
+        userInfoBox.style.display = 'none';
+        currentLoggedUser = null;
+    }
+
+    async function doLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const captcha = document.getElementById('loginCaptcha').value.trim();
+        const errorMsgDiv = document.getElementById('loginErrorMsg');
+        if (!username || !password || !captcha) {
+            errorMsgDiv.textContent = '请填写账号、密码和验证码';
+            errorMsgDiv.style.display = 'block';
+            return;
+        }
+        errorMsgDiv.style.display = 'none';
+        try {
+            const resp = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, captcha }),
+                credentials: 'include'
+            });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('hiddenUsername').value = username;
+                document.getElementById('hiddenPassword').value = password;
+                document.getElementById('hiddenCaptcha').value = captcha;
+                document.getElementById('hiddenClientUA').value = navigator.userAgent;
+                let nextInput = document.querySelector('input[name="next"]');
+                if (nextInput) nextInput.value = '/organic-std';
+                else {
+                    nextInput = document.createElement('input');
+                    nextInput.type = 'hidden';
+                    nextInput.name = 'next';
+                    nextInput.value = '/organic-std';
+                    document.getElementById('savePasswordForm').appendChild(nextInput);
+                }
+                document.getElementById('savePasswordForm').submit();
+            } else {
+                errorMsgDiv.textContent = '登录失败: ' + data.message;
+                errorMsgDiv.style.display = 'block';
+                refreshCaptcha();
+            }
+        } catch (e) {
+            errorMsgDiv.textContent = '请求异常，请稍后重试';
+            errorMsgDiv.style.display = 'block';
+            refreshCaptcha();
+        }
+    }
+
+    async function doLogout() {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+        showLoggedOutUI();
+        await refreshCaptcha();
+        await loadConfigFromBackend();
+    }
+
+    function togglePasswordVisibility() {
+        const pwd = document.getElementById('loginPassword');
+        if (pwd.type === 'password') { pwd.type = 'text'; togglePwdBtn.textContent = '🙈'; }
+        else { pwd.type = 'password'; togglePwdBtn.textContent = '👁️'; }
+    }
+
+    async function showLoginModal() {
+        await refreshCaptcha();
+        document.getElementById('loginForm').reset();
+        document.getElementById('loginErrorMsg').style.display = 'none';
+        if (!loginModalInstance) loginModalInstance = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModalInstance.show();
+    }
+
+    function bindLoginEvents() {
+        showLoginBtn.addEventListener('click', showLoginModal);
+        logoutBtn.addEventListener('click', doLogout);
+        captchaImg.addEventListener('click', refreshCaptcha);
+        togglePwdBtn.addEventListener('click', togglePasswordVisibility);
+        document.getElementById('loginForm').addEventListener('submit', doLogin);
+    }
+
+    // ---------- 组别下拉选项更新 ----------
+    function updateGroupDatalist() {
+        const groups = [...new Set(standardsData.map(item => item.group).filter(g => g && g.trim()))].sort();
+        const datalist = document.getElementById('groupOptions');
+        datalist.innerHTML = '';
+        groups.forEach(g => {
+            const option = document.createElement('option');
+            option.value = g;
+            datalist.appendChild(option);
+        });
+    }
+
+    // ---------- 标准品管理功能 ----------
+    async function loadConfigFromBackend() {
+        try {
+            const resp = await fetch('/api/config');
+            if (!resp.ok) throw new Error('获取配置失败');
+            const config = await resp.json();
+            excelUncPath = config.excelPath || '';
+            certUncPath = config.certPath || '';
+            if (excelUncPath) {
+                const filename = excelUncPath.split('\\').pop();
+                const excelHttpUrl = `/organic_excel/${encodeURIComponent(filename)}`;
+                await loadExcelFromUrl(excelHttpUrl);
+            } else {
+                document.getElementById('standardTableBody').innerHTML = '<tr><td colspan="11" class="text-center text-warning">未配置Excel文件路径，请点击“设置”配置UNC路径或手动导入Excel。</td></tr>';
+                standardsData = [];
+                renderTable(standardsData);
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('standardTableBody').innerHTML = '<tr><td colspan="11" class="text-center text-danger">加载配置失败，请检查后端服务。</td></tr>';
+        }
+    }
+
+    async function loadExcelFromUrl(url) {
+        try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const arrayBuffer = await response.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            if (parseExcelAndStore(workbook)) { 
+                renderTable(standardsData); 
+                updateGroupDatalist();
+                return true; 
+            }
+            else throw new Error('Excel解析失败');
+        } catch (err) {
+            document.getElementById('standardTableBody').innerHTML = `<tr><td colspan="11" class="text-center text-danger">加载Excel失败：${err.message}，请检查路径或手动导入。</td></tr>`;
+            return false;
+        }
+    }
+
+    async function saveConfigToBackend(excelPath, certPath) {
+        try {
+            const resp = await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ excelPath, certPath })
+            });
+            if (!resp.ok) throw new Error(await resp.text() || '保存失败');
+            return true;
+        } catch (err) { alert(`保存配置失败：${err.message}`); return false; }
+    }
+
+    function extractYear(labNo) { const match = labNo.match(/(\d{4})/); return match ? match[1] : null; }
+    async function findAvailablePdfUrl(baseUrl, labNo) {
+        if (!baseUrl.endsWith('/')) baseUrl += '/';
+        const year = extractYear(labNo);
+        const candidates = [baseUrl + encodeURIComponent(labNo) + '.pdf'];
+        if (year) {
+            candidates.push(baseUrl + year + '年标品证书/' + encodeURIComponent(labNo) + '.pdf');
+            candidates.push(baseUrl + year + '标品证书/' + encodeURIComponent(labNo) + '.pdf');
+            candidates.push(baseUrl + year + '年标品证书/消费品/' + encodeURIComponent(labNo) + '.pdf');
+            candidates.push(baseUrl + year + '标品证书/消费品/' + encodeURIComponent(labNo) + '.pdf');
+            candidates.push(baseUrl + year + '年标品证书/轻工/' + encodeURIComponent(labNo) + '.pdf');
+            candidates.push(baseUrl + year + '标品证书/轻工/' + encodeURIComponent(labNo) + '.pdf');
+        }
+        for (const url of [...new Set(candidates)]) {
+            try { const resp = await fetch(url, { method: 'HEAD', cache: 'no-store' }); if (resp.ok) return url; } catch(e) {}
+        }
+        return null;
+    }
+    async function openCertificate(labNo) {
+        if (!labNo || labNo.trim() === '') { alert('实验室编号为空'); return; }
+        if (!certUncPath) { alert('未配置证书文件夹路径，请点击“设置”进行配置'); return; }
+        const foundUrl = await findAvailablePdfUrl(certBaseUrl, labNo);
+        if (foundUrl) window.open(foundUrl, '_blank');
+        else alert(`未找到编号为 ${labNo} 的证书文件`);
+    }
+    function excelDateToJSDate(serial) {
+        if (!serial || typeof serial !== 'number') return serial;
+        const date = new Date((serial - 25569) * 86400000);
+        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
+    function isExpired(expiryStr) {
+        if (!expiryStr || expiryStr === '/') return false;
+        const date = new Date(expiryStr);
+        return !isNaN(date) && date < new Date().setHours(0,0,0,0);
+    }
+    function renderTable(data) {
+        const tbody = document.getElementById('standardTableBody');
+        if (!data.length) { tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">暂无数据，请导入Excel</td></tr>'; document.getElementById('recordCount').innerText = '0'; return; }
+        let html = '';
+        data.forEach(item => {
+            const expired = isExpired(item.expiry);
+            const expiryDisplay = (item.expiry === '/' || !item.expiry) ? '—' : item.expiry;
+            const storageDisplay = (!item.storageDate || item.storageDate === '/') ? '—' : item.storageDate;
+            const originalIdDisplay = (item.originalId && item.originalId.toString().trim() !== '') ? item.originalId : '—';
+            const labNoValue = item.labNo || '';
+            const labNoCell = labNoValue ? `<div class="labno-cell">${escapeHtml(labNoValue)}<i class="fas fa-file-pdf cert-icon" data-labno="${escapeAttr(labNoValue)}" title="打开证书"></i></div>` : '—';
+            html += `<tr class="${expired ? 'expired-row' : ''}"><td>${escapeHtml(originalIdDisplay)}</td><td>${escapeHtml(item.group)}</td><td>${labNoCell}</td><td><strong>${escapeHtml(item.name)}</strong></td><td>${escapeHtml(item.cas)}</td><td>${escapeHtml(item.spec)}</td><td>${expiryDisplay}</td><td>${escapeHtml(item.location)}</td><td>${storageDisplay}</td><td><span class="badge ${item.usage === '开封' ? 'bg-warning text-dark' : 'bg-success'}">${item.usage}</span></td><td class="action-icons"><i class="fas fa-edit text-primary" onclick="openEditModal(${item.id})" title="编辑"></i><i class="fas fa-trash-alt text-danger" onclick="openDeleteModal(${item.id}, '${escapeHtml(item.name).replace(/'/g, "\\'")}')" title="删除"></i></td></tr>`;
+        });
+        tbody.innerHTML = html;
+        document.getElementById('recordCount').innerText = data.length;
+        document.querySelectorAll('.cert-icon').forEach(icon => {
+            icon.removeEventListener('click', certIconClickHandler);
+            icon.addEventListener('click', certIconClickHandler);
+        });
+    }
+    function certIconClickHandler(e) { e.stopPropagation(); const labNo = this.getAttribute('data-labno'); if (labNo) openCertificate(labNo); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+    function escapeAttr(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function filterData() {
+        const keyword = document.getElementById('searchNameCas').value.trim().toLowerCase();
+        const groupVal = document.getElementById('searchGroup').value.trim().toLowerCase();
+        const expiredFilter = document.getElementById('expiredFilter').value;
+        const usageFilter = document.getElementById('usageFilter').value;
+        let filtered = standardsData.filter(item => {
+            if (keyword && !(item.name.toLowerCase().includes(keyword) || item.cas.toLowerCase().includes(keyword) || (item.labNo && item.labNo.toLowerCase().includes(keyword)))) return false;
+            if (groupVal && !item.group.toLowerCase().includes(groupVal)) return false;
+            if (usageFilter !== 'all' && item.usage !== usageFilter) return false;
+            if (expiredFilter !== 'all') { const expired = isExpired(item.expiry); if (expiredFilter === 'expired' && !expired) return false; if (expiredFilter === 'valid' && expired) return false; }
+            return true;
+        });
+        renderTable(filtered);
+    }
+    function resetFilters() {
+        document.getElementById('searchNameCas').value = ''; 
+        document.getElementById('searchGroup').value = ''; 
+        document.getElementById('expiredFilter').value = 'all'; 
+        document.getElementById('usageFilter').value = 'all'; 
+        renderTable(standardsData); 
+    }
+    function parseExcelAndStore(workbook) {
+        const allRecords = [];
+        const sheetNames = ['有机标准物质', '过期标准品'];
+        for (let sheetName of sheetNames) {
+            if (!workbook.Sheets[sheetName]) continue;
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            if (rows.length < 2) continue;
+            let headerRow = null, headerIndex = -1;
+            for (let i = 0; i < Math.min(5, rows.length); i++) {
+                const firstCell = rows[i]?.[0]?.toString().trim() || '';
+                if (firstCell.includes('编号') || firstCell.includes('组别')) { headerRow = rows[i]; headerIndex = i; break; }
+            }
+            if (!headerRow) continue;
+            const colMap = { 'id': ['编号', '序号'], 'group': ['组别'], 'labNo': ['实验室编号'], 'name': ['标品名称', '名称'], 'cas': ['CAS号', 'CAS'], 'spec': ['规格', '规格  浓度', '浓度'], 'manufacturer': ['生产商', '厂家'], 'expiry': ['有效期'], 'location': ['存放地点'], 'storageDate': ['入库日期'], 'usage': ['使用情况'], 'remarks': ['备注'] };
+            const idx = {};
+            for (let j = 0; j < headerRow.length; j++) {
+                const cell = headerRow[j]?.toString().trim() || '';
+                for (let [field, keywords] of Object.entries(colMap)) {
+                    if (idx[field] !== undefined) continue;
+                    for (let kw of keywords) { if (cell.includes(kw)) { idx[field] = j; break; } }
+                }
+            }
+            for (let r = headerIndex+1; r < rows.length; r++) {
+                const row = rows[r];
+                if (!row || row.length === 0) continue;
+                let rawOriginalId = (idx.id !== undefined && row[idx.id] !== undefined) ? row[idx.id].toString().trim() : '';
+                let rawLabNo = (idx.labNo !== undefined && row[idx.labNo] !== undefined) ? row[idx.labNo].toString().trim() : '';
+                const uid = Date.now() + r + Math.random();
+                let rawExpiry = (idx.expiry !== undefined && row[idx.expiry] !== undefined) ? row[idx.expiry].toString().trim() : '/';
+                let rawStorage = (idx.storageDate !== undefined && row[idx.storageDate] !== undefined) ? row[idx.storageDate].toString().trim() : '';
+                if (/^\d+$/.test(rawExpiry) && rawExpiry.length > 4) rawExpiry = excelDateToJSDate(Number(rawExpiry));
+                if (/^\d+$/.test(rawStorage) && rawStorage.length > 4) rawStorage = excelDateToJSDate(Number(rawStorage));
+                const record = { id: uid, originalId: rawOriginalId, group: (idx.group !== undefined && row[idx.group] !== undefined) ? row[idx.group].toString().trim() : '', labNo: rawLabNo, name: (idx.name !== undefined && row[idx.name] !== undefined) ? row[idx.name].toString().trim() : '', cas: (idx.cas !== undefined && row[idx.cas] !== undefined) ? row[idx.cas].toString().trim() : '', spec: (idx.spec !== undefined && row[idx.spec] !== undefined) ? row[idx.spec].toString().trim() : '', manufacturer: (idx.manufacturer !== undefined && row[idx.manufacturer] !== undefined) ? row[idx.manufacturer].toString().trim() : '', expiry: rawExpiry, location: (idx.location !== undefined && row[idx.location] !== undefined) ? row[idx.location].toString().trim() : '', storageDate: rawStorage, usage: (idx.usage !== undefined && row[idx.usage] !== undefined) ? row[idx.usage].toString().trim() : '未开封', remarks: (idx.remarks !== undefined && row[idx.remarks] !== undefined) ? row[idx.remarks].toString().trim() : '' };
+                if (record.group && record.name && record.cas) allRecords.push(record);
+            }
+        }
+        if (allRecords.length === 0) return false;
+        const map = new Map(); for (let rec of allRecords) map.set(rec.id, rec);
+        standardsData = Array.from(map.values());
+        localStorage.setItem('standardData', JSON.stringify(standardsData));
+        return true;
+    }
+    function manualImport(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            if (parseExcelAndStore(workbook)) { 
+                alert(`成功导入 ${standardsData.length} 条数据`); 
+                resetFilters(); 
+                updateGroupDatalist();
+            }
+            else alert('文件解析失败，请确认包含“有机标准物质”或“过期标准品”工作表且列名正确');
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // ---------- 编号自动生成逻辑 ----------
+    function inferPrefixAndType(locationStr) {
+        const loc = (locationStr || '').toLowerCase();
+        if (loc.includes('-') || loc.includes('冷冻') || loc.includes('零下')) {
+            return { prefix: 'E', type: 'freezer' };
+        }
+        if (loc.includes('2~8') || loc.includes('2-8') || 
+            loc.includes('4℃') || loc.includes('4度') || loc.includes('4±') || 
+            loc.includes('冷藏')) {
+            return { prefix: 'D', type: 'fridge' };
+        }
+        return { prefix: '', type: 'room' };
+    }
+
+    function getNextAvailableNumber(prefix) {
+        const usedNumbers = new Set();
+        standardsData.forEach(item => {
+            const origId = item.originalId || '';
+            if (prefix === '') {
+                if (/^\d+$/.test(origId)) usedNumbers.add(parseInt(origId, 10));
+            } else {
+                const regex = new RegExp(`^${prefix}(\\d+)$`, 'i');
+                const match = origId.match(regex);
+                if (match) usedNumbers.add(parseInt(match[1], 10));
+            }
+        });
+        let nextNum = 1;
+        while (usedNumbers.has(nextNum)) nextNum++;
+        return nextNum;
+    }
+
+    function generateSuggestedId(locationStr) {
+        const { prefix } = inferPrefixAndType(locationStr);
+        const nextNum = getNextAvailableNumber(prefix);
+        return prefix + nextNum;
+    }
+
+    // ---------- 查询并填充表单 ----------
+    async function queryAndFill() {
+        const keyword = document.getElementById('labNo').value.trim();
+        if (!keyword) {
+            alert('请输入实验室编号关键词');
+            return;
+        }
+        const btn = document.getElementById('queryLabNoBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 查询中';
+        try {
+            const resp = await fetch(`/api/query?keyword=${encodeURIComponent(keyword)}`, { credentials: 'include' });
+            const data = await resp.json();
+            if (!data.success) {
+                if (data.message.includes('会话已失效') || data.message.includes('未登录')) {
+                    alert('登录已失效，请重新登录');
+                    showLoginModal();
+                } else {
+                    alert('查询失败: ' + data.message);
+                }
+                return;
+            }
+            const list = data.data || [];
+            if (list.length === 0) {
+                alert('未找到匹配的耗材记录');
+                return;
+            }
+            if (list.length === 1) {
+                fillFormFromQueryItem(list[0]);
+            } else {
+                showQueryResultModal(list);
+            }
+        } catch (err) {
+            alert('查询异常: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function fillFormFromQueryItem(item) {
+        document.getElementById('labNo').value = item.customNum || '';
+        document.getElementById('name').value = item.name || '';
+        document.getElementById('cas').value = item.casNo || '';
+        let spec = item.standard || '';
+        let conc = item.concentration || '';
+        if (conc && item.concentrationUnitName) conc += ' ' + item.concentrationUnitName;
+        if (spec && conc) spec = spec + ' / ' + conc;
+        else if (conc) spec = conc;
+        document.getElementById('spec').value = spec || '';
+        document.getElementById('manufacturer').value = item.factoryName || '';
+        document.getElementById('expiry').value = item.validDate || '';
+        const locationVal = item.storageCondition || '';
+        document.getElementById('location').value = locationVal;
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('storageDate').value = `${year}-${month}-${day}`;
+        if (locationVal) {
+            const suggestedId = generateSuggestedId(locationVal);
+            document.getElementById('originalId').value = suggestedId;
+        } else {
+            document.getElementById('originalId').value = '';
+        }
+    }
+
+    function showQueryResultModal(list) {
+        const tbody = document.getElementById('queryResultBody');
+        let html = '';
+        list.forEach(item => {
+            let spec = item.standard || '';
+            let conc = item.concentration || '';
+            if (conc && item.concentrationUnitName) conc += ' ' + item.concentrationUnitName;
+            if (spec && conc) spec = spec + ' / ' + conc;
+            else if (conc) spec = conc;
+            html += `<tr>
+                <td>${escapeHtml(item.customNum) || '—'}</td>
+                <td>${escapeHtml(item.name) || '—'}</td>
+                <td>${escapeHtml(item.casNo) || '—'}</td>
+                <td>${escapeHtml(spec) || '—'}</td>
+                <td>${escapeHtml(item.validDate) || '—'}</td>
+                <td>${escapeHtml(item.factoryName) || '—'}</td>
+                <td>${escapeHtml(item.storageCondition) || '—'}</td>
+                <td><button class="btn btn-sm btn-outline-primary select-item-btn" data-index="${list.indexOf(item)}">选择</button></td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+        tbody.querySelectorAll('.select-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = btn.getAttribute('data-index');
+                fillFormFromQueryItem(list[index]);
+                if (queryResultModalInstance) queryResultModalInstance.hide();
+            });
+        });
+        if (!queryResultModalInstance) {
+            queryResultModalInstance = new bootstrap.Modal(document.getElementById('queryResultModal'));
+        }
+        queryResultModalInstance.show();
+    }
+
+    // ---------- 打开新增/编辑模态框 ----------
+    function openAddModal() { 
+        resetForm(); 
+        document.getElementById('modalTitle').innerText = '新增标准品'; 
+        document.getElementById('editId').value = '';
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('storageDate').value = `${year}-${month}-${day}`;
+        document.getElementById('originalId').value = '';
+        updateGroupDatalist();
+    }
+    window.openAddModal = openAddModal;
+
+    function openEditModal(id) {
+        const item = standardsData.find(s => s.id === id);
+        if (!item) return;
+        document.getElementById('modalTitle').innerText = '编辑标准品';
+        document.getElementById('editId').value = item.id;
+        document.getElementById('originalId').value = item.originalId || '';
+        document.getElementById('group').value = item.group;
+        document.getElementById('labNo').value = item.labNo || '';
+        document.getElementById('name').value = item.name;
+        document.getElementById('cas').value = item.cas;
+        document.getElementById('spec').value = item.spec || '';
+        document.getElementById('manufacturer').value = item.manufacturer || '';
+        document.getElementById('expiry').value = (item.expiry === '/' || !item.expiry) ? '' : item.expiry;
+        document.getElementById('location').value = item.location || '';
+        document.getElementById('storageDate').value = (item.storageDate === '/' || !item.storageDate) ? '' : item.storageDate;
+        document.getElementById('usageStatus').value = item.usage || '未开封';
+        document.getElementById('remarks').value = item.remarks || '';
+        updateGroupDatalist();
+        new bootstrap.Modal(document.getElementById('standardModal')).show();
+    }
+    window.openEditModal = openEditModal;
+
+    function resetForm() { 
+        document.getElementById('standardForm').reset(); 
+        document.getElementById('usageStatus').value = '未开封'; 
+        document.getElementById('editId').value = ''; 
+    }
+
+    async function saveStandard() {
+        const id = document.getElementById('editId').value;
+        const originalId = document.getElementById('originalId').value.trim();
+        const group = document.getElementById('group').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const cas = document.getElementById('cas').value.trim();
+        if (!group || !name || !cas) { alert('请填写组别、标品名称和CAS号'); return; }
+
+        const newRecord = {
+            originalId: originalId,
+            group, 
+            labNo: document.getElementById('labNo').value.trim(),
+            name, 
+            cas, 
+            spec: document.getElementById('spec').value.trim(),
+            manufacturer: document.getElementById('manufacturer').value.trim(),
+            expiry: (document.getElementById('expiry').value.trim() === '') ? '/' : document.getElementById('expiry').value.trim(),
+            location: document.getElementById('location').value.trim(),
+            storageDate: document.getElementById('storageDate').value.trim(),
+            usage: document.getElementById('usageStatus').value,
+            remarks: document.getElementById('remarks').value.trim()
+        };
+
+        const saveBtn = document.getElementById('saveStandardBtn');
+        const originalText = saveBtn.innerHTML;
+
+        // 如果配置了 Excel 路径，先尝试写入 Excel
+        if (excelUncPath) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 同步 Excel...';
+            try {
+                const resp = await fetch('/api/add_to_excel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ record: newRecord }),
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('同步到 Excel 失败：' + data.message);
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalText;
+                    return;  // 阻止本地保存和模态框关闭
+                }
+            } catch (err) {
+                alert('同步到 Excel 时发生错误：' + err.message);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+                return;
+            }
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
+
+        // Excel 写入成功（或未配置路径），更新本地数据
+        if (id) {
+            const idx = standardsData.findIndex(s => s.id == id);
+            if (idx !== -1) standardsData[idx] = { ...standardsData[idx], ...newRecord };
+        } else {
+            const newId = standardsData.length ? Math.max(...standardsData.map(s => s.id)) + 1 : 1;
+            standardsData.push({ id: newId, ...newRecord });
+        }
+        localStorage.setItem('standardData', JSON.stringify(standardsData));
+        resetFilters();
+        updateGroupDatalist();
+        bootstrap.Modal.getInstance(document.getElementById('standardModal')).hide();
+    }
+
+    function openDeleteModal(id, name) { deleteTargetId = id; document.getElementById('deleteItemName').innerText = name; new bootstrap.Modal(document.getElementById('deleteModal')).show(); }
+    window.openDeleteModal = openDeleteModal;
+
+    function confirmDelete() {
+        if (deleteTargetId) {
+            standardsData = standardsData.filter(s => s.id !== deleteTargetId);
+            localStorage.setItem('standardData', JSON.stringify(standardsData));
+            resetFilters();
+            updateGroupDatalist();
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            deleteTargetId = null;
+        }
+    }
+
+    async function saveSettingsAndLoad() {
+        const excelPath = document.getElementById('settingExcelUrl').value.trim();
+        const certPath = document.getElementById('settingCertBaseUrl').value.trim();
+        const success = await saveConfigToBackend(excelPath, certPath);
+        if (success) {
+            await loadConfigFromBackend();
+            bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+        }
+    }
+
+    function openSettingsModal() {
+        document.getElementById('settingExcelUrl').value = excelUncPath;
+        document.getElementById('settingCertBaseUrl').value = certUncPath;
+        new bootstrap.Modal(document.getElementById('settingsModal')).show();
+    }
+
+    // ---------- 初始化 ----------
+    document.addEventListener('DOMContentLoaded', async () => {
+        bindLoginEvents();
+        await checkLoginStatus();
+        await loadConfigFromBackend();
+        updateGroupDatalist();
+
+        document.getElementById('searchBtn').addEventListener('click', filterData);
+        document.getElementById('resetBtn').addEventListener('click', resetFilters);
+        document.getElementById('saveStandardBtn').addEventListener('click', saveStandard);
+        document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+        document.getElementById('manualImportBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xls, .xlsx';
+            input.onchange = (e) => { if (e.target.files.length) manualImport(e.target.files[0]); };
+            input.click();
+        });
+        document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+        document.getElementById('saveSettingsBtn').addEventListener('click', saveSettingsAndLoad);
+        document.getElementById('searchNameCas').addEventListener('keypress', e => { if(e.key === 'Enter') filterData(); });
+        document.getElementById('searchGroup').addEventListener('keypress', e => { if(e.key === 'Enter') filterData(); });
+        document.getElementById('queryLabNoBtn').addEventListener('click', queryAndFill);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# IDE
+.idea/
+
+# Sessions & secrets
+session_*.json
+users_config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Symlinks to network shares
+certificates
+organic_excel
+
+# OS
+Thumbs.db
+Desktop.ini
