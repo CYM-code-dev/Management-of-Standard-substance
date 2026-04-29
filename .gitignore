@@ -12,10 +12,6 @@ __pycache__/
 *.pyo
 .venv/
 
-# Symlinks to network shares
-certificates
-organic_excel
-
 # OS
 Thumbs.db
 Desktop.ini

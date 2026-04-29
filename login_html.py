@@ -7,7 +7,6 @@ import threading
 import datetime
 import base64
 import hashlib
-import subprocess
 import re
 from io import BytesIO
 from urllib.parse import urlencode
@@ -32,8 +31,6 @@ CORS(app, supports_credentials=True)
 
 # ==================== 配置文件路径 ====================
 CONFIG_FILE = 'config.json'
-EXCEL_LINK_PATH = os.path.join(os.path.dirname(__file__), 'organic_excel')
-CERT_LINK_PATH = os.path.join(os.path.dirname(__file__), 'certificates')
 
 
 def load_config():
@@ -47,27 +44,6 @@ def save_config(excel_path, cert_path):
     config = {'excelPath': excel_path, 'certPath': cert_path}
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2)
-
-
-def create_symlink(link_path, target_path):
-    if not target_path.startswith('\\\\'):
-        return False, "仅支持网络共享路径（\\\\server\\share）"
-    try:
-        if os.path.exists(link_path):
-            if os.path.islink(link_path):
-                if os.readlink(link_path) == target_path:
-                    return True, f"符号链接已存在: {link_path}"
-                os.unlink(link_path)
-            else:
-                return False, f"{link_path} 已存在且不是符号链接"
-        os.makedirs(os.path.dirname(link_path), exist_ok=True)
-        cmd = f'mklink /D "{link_path}" "{target_path}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if result.returncode == 0:
-            return True, f"符号链接创建成功: {link_path} -> {target_path}"
-        return False, f"创建失败: {result.stderr}"
-    except Exception as e:
-        return False, str(e)
 
 
 # ==================== 远程系统连接类 ====================
@@ -395,19 +371,29 @@ def handle_config():
     excel_path = data.get('excelPath', '').strip()
     cert_path = data.get('certPath', '').strip()
     save_config(excel_path, cert_path)
-    excel_ok = cert_ok = True
-    if excel_path: excel_ok, _ = create_symlink(EXCEL_LINK_PATH, os.path.dirname(excel_path))
-    if cert_path: cert_ok, _ = create_symlink(CERT_LINK_PATH, cert_path)
+    excel_ok = not excel_path or os.path.exists(os.path.dirname(excel_path))
+    cert_ok = not cert_path or os.path.exists(cert_path)
     if excel_ok and cert_ok: return jsonify({"success": True})
-    return jsonify({"success": False, "message": "符号链接创建失败"}), 500
+    msg = []
+    if not excel_ok: msg.append("Excel 路径不可访问")
+    if not cert_ok: msg.append("证书路径不可访问")
+    return jsonify({"success": False, "message": "；".join(msg)}), 400
 
 @app.route('/organic_excel/<path:filename>')
 def serve_excel(filename):
-    return send_from_directory(EXCEL_LINK_PATH, filename)
+    config = load_config()
+    excel_dir = os.path.dirname(config.get('excelPath', ''))
+    if not excel_dir:
+        return jsonify({"success": False, "message": "未配置 Excel 路径"}), 400
+    return send_from_directory(excel_dir, filename)
 
 @app.route('/certificates/<path:filename>')
 def serve_cert(filename):
-    return send_from_directory(CERT_LINK_PATH, filename)
+    config = load_config()
+    cert_dir = config.get('certPath', '')
+    if not cert_dir:
+        return jsonify({"success": False, "message": "未配置证书路径"}), 400
+    return send_from_directory(cert_dir, filename)
 
 
 # ==================== 智能插入写入 Excel ====================
@@ -637,9 +623,6 @@ def update_lims_unit():
 
 if __name__ == '__main__':
     if not os.path.exists('templates'): os.makedirs('templates')
-    config = load_config()
-    if config.get('excelPath'): create_symlink(EXCEL_LINK_PATH, os.path.dirname(config['excelPath']))
-    if config.get('certPath'): create_symlink(CERT_LINK_PATH, config['certPath'])
     print("Flask 服务启动，访问以下地址：")
     print("  登录页面: http://127.0.0.1:5000/login")
     print("  耗材查询主页: http://127.0.0.1:5000/")
